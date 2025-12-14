@@ -18,7 +18,6 @@
             "mode": "debug",
             "program": "${workspaceFolder}",
             "args": [
-                "dnv",
                 "${input:firstEnvFile}",
                 "${input:secondEnvFile}"
             ]
