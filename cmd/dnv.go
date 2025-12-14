@@ -11,11 +11,11 @@ import (
 )
 
 var dnvCmd = &cobra.Command{
-	Use:   "dnv <first-file> <second-file>",
-	Short: "Compare key=value pairs across two files",
-	Long: `dnv loads KEY=VALUE pairs from the provided files, reports missing keys,
-and highlights values that differ between the two sources.`,
-	Args: cobra.ExactArgs(2),
+	Use:           "dnv <first-file> <second-file>",
+	Short:         "Compare key=value pairs across two files",
+	Long:          `dnv loads KEY=VALUE pairs from the provided files and prints the differences in a diff-like format.`,
+	SilenceErrors: true,
+	Args:          cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		firstPath, secondPath := args[0], args[1]
 
@@ -35,19 +35,31 @@ and highlights values that differ between the two sources.`,
 			return nil
 		}
 
+		cmd.Printf("--- %s\n", firstPath)
+		cmd.Printf("+++ %s\n", secondPath)
+
 		for _, key := range result.MissingInSecond {
-			cmd.Printf("Missing in %s: %s\n", secondPath, key)
+			if value, ok := firstValues[key]; ok {
+				cmd.Printf("- %s=%s\n", key, value)
+				continue
+			}
+			cmd.Printf("- %s\n", key)
 		}
 
 		for _, key := range result.MissingInFirst {
-			cmd.Printf("Missing in %s: %s\n", firstPath, key)
+			if value, ok := secondValues[key]; ok {
+				cmd.Printf("+ %s=%s\n", key, value)
+				continue
+			}
+			cmd.Printf("+ %s\n", key)
 		}
 
 		for _, diff := range result.Differing {
-			cmd.Printf("Value mismatch for %s: %s=%q %s=%q\n", diff.Key, firstPath, diff.FirstValue, secondPath, diff.SecondValue)
+			cmd.Printf("- %s=%s\n", diff.Key, diff.FirstValue)
+			cmd.Printf("+ %s=%s\n", diff.Key, diff.SecondValue)
 		}
 
-		return fmt.Errorf("found differences between %s and %s", firstPath, secondPath)
+		return fmt.Errorf("differences found")
 	},
 }
 
