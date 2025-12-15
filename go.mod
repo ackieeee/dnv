@@ -1,6 +1,6 @@
 module github.com/ackieeee/dnv
 
-go 1.25.2
+go 1.25
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
